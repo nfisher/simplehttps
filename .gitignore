@@ -30,5 +30,5 @@ tags
 # coverage
 coverage.out
 
-/simplehttp
+/simplehttps
 /certs
