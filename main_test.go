@@ -1,11 +1,10 @@
 package main_test
 
 import (
-	"encoding/json"
-	"io"
-	"net/url"
 	"strings"
 	"testing"
+
+	. "."
 )
 
 const validMapping = `
@@ -18,46 +17,54 @@ const validMapping = `
 }
 `
 
-type Config struct {
-	Apps map[string]*url.URL
+func Test_DecodeConfig_should_yield_error_with_invalid_json(t *testing.T) {
+	r := strings.NewReader(validMapping[:len(validMapping)-3])
+	c := NewConfig()
+
+	err := DecodeConfig(r, c)
+
+	if err == nil {
+		t.Fatal("want error, got nil")
+	}
 }
 
-func (c *Config) Len() int {
-	return len(c.Apps)
+func Test_DecodeConfig_should_yield_error_with_invalid_url(t *testing.T) {
+	invalidUrlMapping := `{ "apps": { "/path1": "://localhost:8080" } }`
+	r := strings.NewReader(invalidUrlMapping)
+	c := NewConfig()
+
+	err := DecodeConfig(r, c)
+
+	if err == nil {
+		t.Fatal("want error, got nil")
+	}
 }
 
-func DecodeConfig(r io.Reader) (config *Config, err error) {
-	dec := json.NewDecoder(r)
-	config = &Config{}
-
-	err = dec.Decode(config)
-
-	return config, err
-}
-
-func Test_should_parse_valid_json(t *testing.T) {
+func Test_DecodeConfig_should_parse_valid_json(t *testing.T) {
 	r := strings.NewReader(validMapping)
+	c := NewConfig()
 
-	c, _ := DecodeConfig(r)
+	err := DecodeConfig(r, c)
 
-	if c == nil {
-		t.Fatal("want a *Config, got nil")
+	if err != nil {
+		t.Fatalf("want err = nil, got %q", err)
 	}
 
 	if c.Len() != 3 {
-		t.Fatalf("want 3, got %q", c.Len())
+		t.Fatalf("want 3, got %v", c.Len())
 	}
 
-	u, ok := c.Apps["/path1"]
-	if !ok {
-		t.Fatal("want ok, got false")
+	u := c.UrlFor("/path1")
+	if u.String() != "http://localhost:8080" {
+		t.Fatalf("want http://localhost:8080, got %q", u.String())
 	}
+}
 
-	if u == nil {
-		t.Fatalf("want *URL, got nil")
-	}
+func Test_UrlFor_should_return_nil_if_path_not_found(t *testing.T) {
+	c := NewConfig()
 
-	if u.Host != "localhost:8080" {
-		t.Fatalf("want localhost:8080, got %q", u.String())
+	u := c.UrlFor("/path1")
+	if u != nil {
+		t.Fatalf("want u = nil, got %q", u.String())
 	}
 }
