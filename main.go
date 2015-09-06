@@ -9,6 +9,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -35,27 +36,40 @@ type Config struct {
 	apps map[string]*url.URL
 }
 
+// NewConfig
+func NewConfig() *Config {
+	return &Config{apps: make(map[string]*url.URL)}
+}
+
 // Len
 func (c *Config) Len() int {
 	return len(c.apps)
 }
 
+// AddUrl
 func (c *Config) AddUrl(p string, u *url.URL) {
 	c.Lock()
 	c.apps[p] = u
 	c.Unlock()
 }
 
+// UrlFor
 func (c *Config) UrlFor(path string) (u *url.URL) {
-	c.RLock()
-	u = c.apps[path]
-	c.RUnlock()
+	baseComponents := strings.Split(path, "/")
 
-	return u
-}
+	for i := 0; i < len(baseComponents); i++ {
+		currentPath := strings.Join(baseComponents[:len(baseComponents)-i], "/")
 
-func NewConfig() *Config {
-	return &Config{apps: make(map[string]*url.URL)}
+		c.RLock()
+		u, ok := c.apps[currentPath]
+		c.RUnlock()
+
+		if ok {
+			return u
+		}
+	}
+
+	return nil
 }
 
 // DecodeConfig
@@ -86,6 +100,26 @@ type Rewriter struct {
 	Config   *Config
 }
 
+// ServeHTTP
+func (rw *Rewriter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	writer := &Writer{
+		0,
+		w,
+	}
+
+	u := rw.Config.UrlFor(r.URL.Path)
+	if u != nil {
+		// TODO: (NF 2015-09-01) Investigate whether the proxy can be cached and reused indefinitely.
+		proxy := httputil.NewSingleHostReverseProxy(u)
+		proxy.ServeHTTP(writer, r)
+	} else {
+		rw.Delegate.ServeHTTP(writer, r)
+	}
+
+	log.Printf("%v\t%v\t%q\t%v\t%v\n", r.RemoteAddr, r.Method, r.URL, time.Now().Sub(start), writer.TotalBytes())
+}
+
 // Writer
 type Writer struct {
 	Counter int
@@ -107,26 +141,6 @@ func (w *Writer) Write(b []byte) (int, error) {
 // TotalBytes
 func (w *Writer) TotalBytes() int {
 	return w.Counter
-}
-
-// ServeHTTP
-func (rw *Rewriter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	start := time.Now()
-	writer := &Writer{
-		0,
-		w,
-	}
-
-	u := rw.Config.UrlFor(r.URL.Path)
-	if u != nil {
-		// TODO: (NF 2015-09-01) Investigate whether this is worth putting into the Config.
-		proxy := httputil.NewSingleHostReverseProxy(u)
-		proxy.ServeHTTP(writer, r)
-	} else {
-		rw.Delegate.ServeHTTP(writer, r)
-	}
-
-	log.Printf("%v\t%v\t%v\t%v\t%v\n", r.RemoteAddr, r.Method, r.URL, time.Now().Sub(start), writer.TotalBytes())
 }
 
 // main

@@ -1,6 +1,7 @@
 SHELL := /bin/sh
 SRC := $(wildcard *.go)
 EXE := simplehttps
+COV := coverage.out
 
 .PHONY: all
 all: test vet $(EXE)
@@ -19,6 +20,17 @@ install:
 .PHONY: test
 test:
 	go test -v
+
+.PHONY: cov
+cov: $(COV)
+	go tool cover -func=coverage.out
+
+.PHONY: htmlcov
+htmlcov: coverage.out
+	go tool cover -html=coverage.out
+
+$(COV): $(SRC)
+	go test -covermode=count -coverprofile=coverage.out
 
 .PHONY: vet
 vet:
