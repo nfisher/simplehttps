@@ -26,11 +26,11 @@ cov: $(COV)
 	go tool cover -func=coverage.out
 
 .PHONY: htmlcov
-htmlcov: coverage.out
+htmlcov: $(COV)
 	go tool cover -html=coverage.out
 
 $(COV): $(SRC)
-	go test -covermode=count -coverprofile=coverage.out
+	go test -v -covermode=count -coverprofile=coverage.out
 
 .PHONY: vet
 vet:

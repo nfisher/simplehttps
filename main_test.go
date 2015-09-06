@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	. "."
+	. "github.com/nfisher/simplehttps"
 )
 
 const validMapping = `
