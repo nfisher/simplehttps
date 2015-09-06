@@ -1,6 +1,6 @@
 # simplehttps
 
-![Coverage Status](https://coveralls.io/repos/nfisher/simplehttps/badge.svg?branch=master&service=github)](https://coveralls.io/github/nfisher/simplehttps?branch=master)
+[![Coverage Status](https://coveralls.io/repos/nfisher/simplehttps/badge.svg?branch=master&service=github)](https://coveralls.io/github/nfisher/simplehttps?branch=master)
 [![Build Status](https://travis-ci.org/nfisher/simplehttps.svg?branch=master)](https://travis-ci.org/nfisher/simplehttps)
 
 
