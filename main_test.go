@@ -1,6 +1,7 @@
 package main_test
 
 import (
+	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -17,6 +18,17 @@ const validMapping = `
 	}
 }
 `
+
+func Test_Write_should_increment_TotalBytes_correctly(t *testing.T) {
+	w := &Writer{0, httptest.NewRecorder()}
+
+	w.Write([]byte("hello world"))
+	w.Write([]byte("!"))
+
+	if w.TotalBytes() != 12 {
+		t.Fatalf("want w.TotalBytes() = 12, got %v", w.TotalBytes())
+	}
+}
 
 func Test_DecodeConfig_should_yield_error_with_invalid_json(t *testing.T) {
 	r := strings.NewReader(validMapping[:len(validMapping)-3])

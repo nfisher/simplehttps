@@ -46,13 +46,6 @@ func (c *Config) Len() int {
 	return len(c.apps)
 }
 
-// AddUrl
-func (c *Config) AddUrl(p string, u *url.URL) {
-	c.Lock()
-	c.apps[p] = u
-	c.Unlock()
-}
-
 // UrlFor
 func (c *Config) UrlFor(path string) (u *url.URL) {
 	baseComponents := strings.Split(path, "/")
