@@ -47,8 +47,22 @@ func (c *Config) Len() int {
 }
 
 // UrlFor
-func (c *Config) UrlFor(path string) (u *url.URL) {
+func (c *Config) UrlFor(host, path string) (u *url.URL) {
+	u = c.urlFor("//"+host, path)
+	if u != nil {
+		return u
+	}
+
+	u = c.urlFor("", path)
+
+	return u
+}
+
+func (c *Config) urlFor(host, path string) (u *url.URL) {
 	baseComponents := strings.Split(path, "/")
+	if host != "" {
+		baseComponents = append([]string{host}, baseComponents[1:len(baseComponents)-1]...)
+	}
 
 	for i := 0; i < len(baseComponents); i++ {
 		currentPath := strings.Join(baseComponents[:len(baseComponents)-i], "/")
@@ -101,7 +115,8 @@ func (rw *Rewriter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w,
 	}
 
-	u := rw.Config.UrlFor(r.URL.Path)
+	u := rw.Config.UrlFor(r.Host, r.URL.Path)
+
 	if u != nil {
 		// TODO: (NF 2015-09-01) Investigate whether the proxy can be cached and reused indefinitely.
 		proxy := httputil.NewSingleHostReverseProxy(u)

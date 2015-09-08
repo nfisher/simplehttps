@@ -14,7 +14,8 @@ const validMapping = `
 		"/path1": "http://localhost:8080",
 		"/path2": "http://localhost:8081",
 		"/path3/subpath1": "http://localhost:8082",
-		"/path3/subpath1/subpath2": "http://localhost:8083"
+		"/path3/subpath1/subpath2": "http://localhost:8083",
+		"//dev.local/path3/subpath1/subpath2": "http://localhost:8084"
 	}
 }
 `
@@ -75,17 +76,18 @@ func Test_UrlFor_should_return_expected_urls_for_a_given_path(t *testing.T) {
 	DecodeConfig(r, c)
 
 	var testData = []struct {
+		Host string
 		Path string
 		Url  string
 	}{
-		{"/path1", "http://localhost:8080"},
-		{"/path2/index.html", "http://localhost:8081"},
-		{"/path3/subpath1/index.html", "http://localhost:8082"},
-		{"/path3/subpath1/subpath2/index.html", "http://localhost:8083"},
+		{"localhost", "/path1", "http://localhost:8080"},
+		{"localhost", "/path2/index.html", "http://localhost:8081"},
+		{"localhost", "/path3/subpath1/index.html", "http://localhost:8082"},
+		{"dev.local", "/path3/subpath1/subpath2/index.html", "http://localhost:8084"},
 	}
 
 	for i, v := range testData {
-		u := c.UrlFor(v.Path)
+		u := c.UrlFor(v.Host, v.Path)
 		if u == nil {
 			t.Errorf("[%v] want u = *url.URL, got nil", i)
 			continue
@@ -100,7 +102,7 @@ func Test_UrlFor_should_return_expected_urls_for_a_given_path(t *testing.T) {
 func Test_UrlFor_should_return_nil_if_path_not_found(t *testing.T) {
 	c := NewConfig()
 
-	u := c.UrlFor("/path1")
+	u := c.UrlFor("localhost", "/path1")
 	if u != nil {
 		t.Fatalf("want u = nil, got %q", u.String())
 	}
