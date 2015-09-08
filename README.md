@@ -34,11 +34,11 @@ With the above configuration;
 
 The easiest way to route to the dev.local domain is to add a host entry. Alternatively you can set the host header if using curl or equivalent.
 
-# Listen on 443
+## Listen on 443
 
-Port 443 is considered a privileged port and most if not all systems requires administrative privileges to be bound. However if you want clean https URLs such as https://dev.local/ without specifying a port you'll need to start the service under a user account with administrative privileges.
+Port 443 is considered a privileged port and most if not all systems require administrative privileges to bind a listening socket to a privileged port. If you want clean https URLs such as https://dev.local/ without specifying a port you'll need to start the service under a user account with administrative privileges. As a compromise of the application would yield the same privilege of the user it is launched as I advise binding it to the loopback interface which is only accessible from your local machine and not routable.
 
-Given this app is developer focused I would suggest binding to the loop back interface as follows as an administrator;
+To bind to the loopback interface run the following command as an administrator;
 
 ```
 simplehttps -listen="127.0.0.1:443"
