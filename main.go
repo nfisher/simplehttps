@@ -120,6 +120,7 @@ func (rw *Rewriter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if u != nil {
 		// TODO: (NF 2015-09-01) Investigate whether the proxy can be cached and reused indefinitely.
 		proxy := httputil.NewSingleHostReverseProxy(u)
+		r.Header.Set("x-forwarded-proto", "https")
 		proxy.ServeHTTP(writer, r)
 	} else {
 		rw.Delegate.ServeHTTP(writer, r)
