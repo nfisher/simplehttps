@@ -12,7 +12,7 @@ bench.out: $(SRC)
 	go test -bench ./... | tee bench.out
 
 cover.out: $(SRC)
-	go test -v -cover -covermode atomic -coverprofile cover.out ./...
+	go test -v -cover -covermode atomic -coverprofile cover.out .
 
 coverage.html: cover.out
 	go tool cover -html=cover.out -o coverage.html
