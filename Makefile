@@ -36,8 +36,8 @@ lint.out: $(SRC)
 .PHONY: test
 test: coverage.out
 
-vet.out: $(SRC)
-	go vet -v ./... | tee vet.out
+vet.out: install
+	go vet -composites=false -v ./... | tee vet.out
 
 install: $(SRC)
 	go install -v -ldflags "-X main.Version=$(GIT_REV)" github.com/nfisher/simplehttps/cmd/simplehttps

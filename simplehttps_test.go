@@ -21,7 +21,10 @@ const validMapping = `
 `
 
 func Test_Write_should_increment_TotalBytes_correctly(t *testing.T) {
-	w := &simplehttps.Writer{0, httptest.NewRecorder()}
+	w := &simplehttps.Writer{
+		0,
+		httptest.NewRecorder(),
+	}
 
 	w.Write([]byte("hello world"))
 	w.Write([]byte("!"))
