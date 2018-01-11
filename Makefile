@@ -1,37 +1,39 @@
+# ex : shiftwidth=2 tabstop=2 softtabstop=2 :                                      
 SHELL := /bin/sh
-SRC := $(wildcard *.go)
-EXE := simplehttps
-COV := coverage.out
+SRC := $(wildcard *.go) cmd/simplehttps/main.go
 
 .PHONY: all
-all: test vet $(EXE)
+all: lint.out vet.out coverage.out bench.out
 
-$(EXE): $(SRC)
-	go build
+.PHONY: bench
+bench: bench.out
 
-.PHONY: run
-run: $(EXE)
-	./$(EXE)
+bench.out: $(SRC)
+	go test -bench ./... | tee bench.out
 
-.PHONY: install
-install:
-	go install
+cover.out: $(SRC)
+	go test -v -cover -covermode atomic -coverprofile cover.out ./...
+
+coverage.html: cover.out
+	go tool cover -html=cover.out -o coverage.html
+
+coverage.out: cover.out
+	go tool cover -func=cover.out | tee coverage.out
+
+.PHONY: clean
+clean:
+	rm *.out
+	go clean -i ./...
+
+.PHONY: fast
+fast: vet cov
+
+lint.out: $(SRC)
+	golint | tee lint.out
 
 .PHONY: test
-test:
-	go test -v
+test: coverage.out
 
-.PHONY: cov
-cov: $(COV)
-	go tool cover -func=coverage.out
+vet.out: $(SRC)
+	go vet -v ./... | tee vet.out
 
-.PHONY: htmlcov
-htmlcov: $(COV)
-	go tool cover -html=coverage.out
-
-$(COV): $(SRC)
-	go test -v -covermode=count -coverprofile=coverage.out
-
-.PHONY: vet
-vet:
-	go vet -x

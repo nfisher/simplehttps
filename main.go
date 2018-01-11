@@ -1,14 +1,12 @@
-package main
+package simplehttps
 
 import (
 	"encoding/json"
-	"flag"
 	"io"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -30,24 +28,25 @@ type rawConfig struct {
 	Apps map[string]string
 }
 
-// Config
+// Config maps API root paths to URL backends.
 type Config struct {
 	sync.RWMutex
 	apps map[string]*url.URL
 }
 
-// NewConfig
+// NewConfig generates a runtime configuration of the path to backend URL
+// mapping.
 func NewConfig() *Config {
 	return &Config{apps: make(map[string]*url.URL)}
 }
 
-// Len
+// Len returns the number of registered backend services.
 func (c *Config) Len() int {
 	return len(c.apps)
 }
 
-// UrlFor
-func (c *Config) UrlFor(host, path string) (u *url.URL) {
+// URLFor maps the host and path to a backend URL.
+func (c *Config) URLFor(host, path string) (u *url.URL) {
 	u = c.urlFor("//"+host, path)
 	if u != nil {
 		return u
@@ -79,7 +78,14 @@ func (c *Config) urlFor(host, path string) (u *url.URL) {
 	return nil
 }
 
-// DecodeConfig
+// Add adds a path p and url u to the configuration.
+func (c *Config) Add(p string, u *url.URL) {
+	c.Lock()
+	c.apps[p] = u
+	c.Unlock()
+}
+
+// DecodeConfig reads the config from the reader r.
 func DecodeConfig(r io.Reader, config *Config) (err error) {
 	dec := json.NewDecoder(r)
 	raw := &rawConfig{}
@@ -95,19 +101,19 @@ func DecodeConfig(r io.Reader, config *Config) (err error) {
 			return err
 		}
 
-		config.apps[p] = u
+		config.Add(p, u)
 	}
 
 	return nil
 }
 
-// Rewriter
+// Rewriter is a URL rewriter middleware that maps requests to backend services.
 type Rewriter struct {
 	Delegate http.Handler
 	Config   *Config
 }
 
-// ServeHTTP
+// ServeHTTP wraps the request wih rewrite goodness and logging.
 func (rw *Rewriter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	writer := &Writer{
@@ -115,10 +121,11 @@ func (rw *Rewriter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w,
 	}
 
-	u := rw.Config.UrlFor(r.Host, r.URL.Path)
+	u := rw.Config.URLFor(r.Host, r.URL.Path)
 
 	if u != nil {
-		// TODO: (NF 2015-09-01) Investigate whether the proxy can be cached and reused indefinitely.
+		// TODO: (NF 2015-09-01) Investigate whether the proxy can be cached and
+		// reused indefinitely.
 		proxy := httputil.NewSingleHostReverseProxy(u)
 		r.Header.Set("x-forwarded-proto", "https")
 		proxy.ServeHTTP(writer, r)
@@ -129,13 +136,13 @@ func (rw *Rewriter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%v\t%v\t%q\t%v\t%v\n", r.RemoteAddr, r.Method, r.URL, time.Now().Sub(start), writer.TotalBytes())
 }
 
-// Writer
+// Writer counts the number of bytes written to the response.
 type Writer struct {
 	Counter int
 	http.ResponseWriter
 }
 
-// Write
+// Write composes the ResponseWriter function with a byte counter.
 func (w *Writer) Write(b []byte) (int, error) {
 	count, err := w.ResponseWriter.Write(b)
 	if err != nil {
@@ -147,44 +154,7 @@ func (w *Writer) Write(b []byte) (int, error) {
 	return count, nil
 }
 
-// TotalBytes
+// TotalBytes returns the number of bytes written to the current request stream.
 func (w *Writer) TotalBytes() int {
 	return w.Counter
-}
-
-// main
-func main() {
-	var listenAddr string
-	var certPath string
-	var keyPath string
-	var siteRoot string
-	var configFile string
-
-	flag.StringVar(&configFile, "config", "config.json", "configuration file for application mappings.")
-	flag.StringVar(&listenAddr, "listen", "127.0.0.1:8443", "listening address")
-	flag.StringVar(&certPath, "cert", "certs/server.crt", "certificate path")
-	flag.StringVar(&keyPath, "key", "certs/server.key", "key path")
-	flag.StringVar(&siteRoot, "root", "_site", "site root directory")
-
-	flag.Parse()
-
-	file, err := os.Open(configFile)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	defer file.Close()
-
-	c := NewConfig()
-	err = DecodeConfig(file, c)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
-	handler := &Rewriter{
-		Delegate: http.FileServer(http.Dir(siteRoot)),
-		Config:   c,
-	}
-
-	log.Printf("server listening on https://%v serving from %v\n", listenAddr, siteRoot)
-	log.Fatal(http.ListenAndServeTLS(listenAddr, certPath, keyPath, handler))
 }

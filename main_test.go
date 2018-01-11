@@ -1,4 +1,4 @@
-package main_test
+package simplehttps_test
 
 import (
 	"net/http/httptest"
@@ -87,7 +87,7 @@ func Test_UrlFor_should_return_expected_urls_for_a_given_path(t *testing.T) {
 	}
 
 	for i, v := range testData {
-		u := c.UrlFor(v.Host, v.Path)
+		u := c.URLFor(v.Host, v.Path)
 		if u == nil {
 			t.Errorf("[%v] want u = *url.URL, got nil", i)
 			continue
@@ -102,7 +102,7 @@ func Test_UrlFor_should_return_expected_urls_for_a_given_path(t *testing.T) {
 func Test_UrlFor_should_return_nil_if_path_not_found(t *testing.T) {
 	c := NewConfig()
 
-	u := c.UrlFor("localhost", "/path1")
+	u := c.URLFor("localhost", "/path1")
 	if u != nil {
 		t.Fatalf("want u = nil, got %q", u.String())
 	}
