@@ -1,7 +1,4 @@
-# simplehttps
-
-[![Coverage Status](https://coveralls.io/repos/nfisher/simplehttps/badge.svg?branch=master&service=github)](https://coveralls.io/github/nfisher/simplehttps?branch=master)
-[![Build Status](https://travis-ci.org/nfisher/simplehttps.svg?branch=master)](https://travis-ci.org/nfisher/simplehttps)
+# simplehttps [![Coverage Status](https://coveralls.io/repos/nfisher/simplehttps/badge.svg?branch=master&service=github)](https://coveralls.io/github/nfisher/simplehttps?branch=master) [![Build Status](https://travis-ci.org/nfisher/simplehttps.svg?branch=master)](https://travis-ci.org/nfisher/simplehttps) [![codecov](https://codecov.io/gh/nfisher/simplehttps/branch/master/graph/badge.svg)](https://codecov.io/gh/nfisher/simplehttps) [![Go Report Card](https://goreportcard.com/badge/github.com/nfisher/simplehttps)](https://goreportcard.com/report/github.com/nfisher/simplehttps)
 
 
 Simple HTTPS server was developed to simplify development for secure sites. It aims to provide a simple mechanism to proxy APIs and a static app under the same domain on a developers workstation. Thereby eliminating the need for CORS exceptions and encouraging the use of best practises like HTTPS only cookies.
