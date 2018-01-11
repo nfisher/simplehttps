@@ -10,6 +10,7 @@ import (
 	"github.com/nfisher/simplehttps"
 )
 
+// Version is the injected version of the app based on the GIT SHA.
 var Version = "dev"
 
 type cmdConfig struct {
