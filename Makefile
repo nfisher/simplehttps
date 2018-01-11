@@ -1,6 +1,8 @@
 # ex : shiftwidth=2 tabstop=2 softtabstop=2 :                                      
+
 SHELL := /bin/sh
 SRC := $(wildcard *.go) cmd/simplehttps/main.go
+GIT_REV := $(shell git rev-parse --short HEAD)
 
 .PHONY: all
 all: lint.out vet.out coverage.out bench.out
@@ -37,3 +39,5 @@ test: coverage.out
 vet.out: $(SRC)
 	go vet -v ./... | tee vet.out
 
+install: $(SRC)
+	go install -v -ldflags "-X main.Version=$(GIT_REV)" github.com/nfisher/simplehttps/cmd/simplehttps
