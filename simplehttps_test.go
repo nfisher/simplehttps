@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	. "github.com/nfisher/simplehttps"
+	"github.com/nfisher/simplehttps"
 )
 
 const validMapping = `
@@ -21,7 +21,7 @@ const validMapping = `
 `
 
 func Test_Write_should_increment_TotalBytes_correctly(t *testing.T) {
-	w := &Writer{0, httptest.NewRecorder()}
+	w := &simplehttps.Writer{0, httptest.NewRecorder()}
 
 	w.Write([]byte("hello world"))
 	w.Write([]byte("!"))
@@ -33,9 +33,9 @@ func Test_Write_should_increment_TotalBytes_correctly(t *testing.T) {
 
 func Test_DecodeConfig_should_yield_error_with_invalid_json(t *testing.T) {
 	r := strings.NewReader(validMapping[:len(validMapping)-3])
-	c := NewConfig()
+	c := simplehttps.NewConfig()
 
-	err := DecodeConfig(r, c)
+	err := simplehttps.DecodeConfig(r, c)
 
 	if err == nil {
 		t.Fatal("want error, got nil")
@@ -45,9 +45,9 @@ func Test_DecodeConfig_should_yield_error_with_invalid_json(t *testing.T) {
 func Test_DecodeConfig_should_yield_error_with_invalid_url(t *testing.T) {
 	invalidUrlMapping := `{ "apps": { "/path1": "://localhost:8080" } }`
 	r := strings.NewReader(invalidUrlMapping)
-	c := NewConfig()
+	c := simplehttps.NewConfig()
 
-	err := DecodeConfig(r, c)
+	err := simplehttps.DecodeConfig(r, c)
 
 	if err == nil {
 		t.Fatal("want error, got nil")
@@ -56,9 +56,9 @@ func Test_DecodeConfig_should_yield_error_with_invalid_url(t *testing.T) {
 
 func Test_DecodeConfig_should_parse_valid_json(t *testing.T) {
 	r := strings.NewReader(validMapping)
-	c := NewConfig()
+	c := simplehttps.NewConfig()
 
-	err := DecodeConfig(r, c)
+	err := simplehttps.DecodeConfig(r, c)
 
 	if err != nil {
 		t.Fatalf("want err = nil, got %q", err)
@@ -71,9 +71,9 @@ func Test_DecodeConfig_should_parse_valid_json(t *testing.T) {
 
 func Test_UrlFor_should_return_expected_urls_for_a_given_path(t *testing.T) {
 	r := strings.NewReader(validMapping)
-	c := NewConfig()
+	c := simplehttps.NewConfig()
 
-	DecodeConfig(r, c)
+	simplehttps.DecodeConfig(r, c)
 
 	var testData = []struct {
 		Host string
@@ -100,7 +100,7 @@ func Test_UrlFor_should_return_expected_urls_for_a_given_path(t *testing.T) {
 }
 
 func Test_UrlFor_should_return_nil_if_path_not_found(t *testing.T) {
-	c := NewConfig()
+	c := simplehttps.NewConfig()
 
 	u := c.URLFor("localhost", "/path1")
 	if u != nil {

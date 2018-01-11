@@ -113,7 +113,7 @@ type Rewriter struct {
 	Config   *Config
 }
 
-// ServeHTTP wraps the request wih rewrite goodness and logging.
+// ServeHTTP wraps the request with rewrite goodness and logging.
 func (rw *Rewriter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	writer := &Writer{
