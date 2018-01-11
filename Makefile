@@ -29,7 +29,7 @@ clean:
 fast: vet cov
 
 lint.out: $(SRC)
-	golint | tee lint.out
+	golint -set_exit_status | tee lint.out
 
 .PHONY: test
 test: coverage.out
